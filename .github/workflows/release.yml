@@ -124,3 +124,13 @@ jobs:
         with:
           webhook-url: ${{ secrets.WEBHOOK_URL }}
           raw-data: ./build/embed.json
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.properties.outputs.version }}
+          name: "Ad Astra ${{ steps.properties.outputs.version }}"
+          body_path: changelog.md
+          files: |
+            ./forge/build/libs/!(*-@(dev|sources|dev-shadow)).jar
+            ./fabric/build/libs/!(*-@(dev|sources|dev-shadow)).jar
