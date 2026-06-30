@@ -163,7 +163,7 @@ public class PlanetsScreen extends AbstractContainerScreen<PlanetsMenu> {
     }
 
     private void addSpaceStationButtons(ResourceKey<Level> dimension) {
-        menu.getOwnedAndTeamSpaceStations(dimension).forEach(station -> {
+        menu.getAllSpaceStations(dimension).forEach(station -> {
             ChunkPos pos = station.getSecond().position();
             var button = addWidget(new LabeledImageButton(114, height / 2, 99, 20, 0, 0, 20, BUTTON, 99, 40, b ->
                 landOnSpaceStation(dimension, pos), station.getSecond().name()));

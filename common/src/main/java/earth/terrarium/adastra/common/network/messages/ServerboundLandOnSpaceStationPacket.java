@@ -7,10 +7,8 @@ import com.teamresourceful.resourcefullib.common.network.base.PacketType;
 import com.teamresourceful.resourcefullib.common.network.base.ServerboundPacketType;
 import earth.terrarium.adastra.AdAstra;
 import earth.terrarium.adastra.api.planets.PlanetApi;
-import earth.terrarium.adastra.common.compat.argonauts.ArgonautsIntegration;
 import earth.terrarium.adastra.common.config.AdAstraConfig;
 import earth.terrarium.adastra.common.handlers.SpaceStationHandler;
-import earth.terrarium.adastra.common.handlers.base.SpaceStation;
 import earth.terrarium.adastra.common.network.CodecPacketType;
 import earth.terrarium.adastra.common.utils.ModUtils;
 import net.minecraft.core.BlockPos;
@@ -23,7 +21,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -67,7 +64,9 @@ public record ServerboundLandOnSpaceStationPacket(ResourceKey<Level> dimension,
                 if (!ModUtils.canTeleportToPlanet(player, planet)) return;
 
                 var targetPos = packet.spaceStationPos();
-                if (!isAllowed(serverPlayer, targetLevel, targetPos)) return;
+                if (SpaceStationHandler.getAllSpaceStations(targetLevel).values().stream()
+                    .flatMap(Set::stream)
+                    .noneMatch(station -> station.position().equals(targetPos))) return;
 
                 BlockPos middleBlockPosition = targetPos.getMiddleBlockPosition(AdAstraConfig.atmosphereLeave);
                 ModUtils.land(serverPlayer, targetLevel, new Vec3(middleBlockPosition.getX() - 0.5f, middleBlockPosition.getY(), middleBlockPosition.getZ() - 0.5f));
@@ -75,22 +74,4 @@ public record ServerboundLandOnSpaceStationPacket(ResourceKey<Level> dimension,
         }
     }
 
-    private static boolean isAllowed(ServerPlayer player, ServerLevel level, ChunkPos targetPos) {
-        Set<SpaceStation> stations = new HashSet<>(SpaceStationHandler.getOwnedSpaceStations(player, level));
-
-        if (!ArgonautsIntegration.argonautsLoaded()) return stations
-            .stream()
-            .anyMatch(station -> station.position().equals(targetPos));
-
-        for (var member : ArgonautsIntegration.getClientPartyMembers(player.getUUID())) {
-            stations.addAll(SpaceStationHandler.getOwnedSpaceStations(member.getId(), level));
-        }
-        for (var member : ArgonautsIntegration.getClientGuildMembers(player.getUUID())) {
-            stations.addAll(SpaceStationHandler.getOwnedSpaceStations(member.getId(), level));
-        }
-
-        return stations
-            .stream()
-            .anyMatch(station -> station.position().equals(targetPos));
-    }
 }
