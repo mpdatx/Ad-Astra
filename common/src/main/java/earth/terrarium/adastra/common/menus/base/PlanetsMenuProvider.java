@@ -35,7 +35,7 @@ public class PlanetsMenuProvider implements ExtraDataMenuProvider {
 
     @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory inventory, Player player) {
-        return new PlanetsMenu(containerId, inventory, Set.of(), new com.mojang.datafixers.util.Pair<>(Map.of(), Map.of()), Object2BooleanMaps.emptyMap(), Set.of());
+        return new PlanetsMenu(containerId, inventory, Set.of(), Map.of(), Object2BooleanMaps.emptyMap(), Set.of());
     }
 
     @Override
@@ -56,10 +56,6 @@ public class PlanetsMenuProvider implements ExtraDataMenuProvider {
                     buffer.writeChunkPos(station.position());
                 });
                 buffer.writeUUID(id);
-                String ownerName = player.server.getProfileCache() != null
-                    ? player.server.getProfileCache().get(id).map(com.mojang.authlib.GameProfile::getName).orElse(id.toString())
-                    : id.toString();
-                buffer.writeUtf(ownerName);
             });
         });
 
@@ -89,12 +85,7 @@ public class PlanetsMenuProvider implements ExtraDataMenuProvider {
     }
 
     public static Map<ResourceKey<Level>, Map<UUID, Set<SpaceStation>>> createSpaceStationsFromBuf(FriendlyByteBuf buf) {
-        return createSpaceStationDataFromBuf(buf).getFirst();
-    }
-
-    public static com.mojang.datafixers.util.Pair<Map<ResourceKey<Level>, Map<UUID, Set<SpaceStation>>>, Map<UUID, String>> createSpaceStationDataFromBuf(FriendlyByteBuf buf) {
         Map<ResourceKey<Level>, Map<UUID, Set<SpaceStation>>> spaceStationsMap = new HashMap<>();
-        Map<UUID, String> ownerNames = new HashMap<>();
 
         int planetsSize = buf.readVarInt();
         for (int i = 0; i < planetsSize; i++) {
@@ -113,15 +104,13 @@ public class PlanetsMenuProvider implements ExtraDataMenuProvider {
                 }
 
                 UUID id = buf.readUUID();
-                String ownerName = buf.readUtf();
                 spaceStationGroupMap.put(id, spaceStations);
-                ownerNames.put(id, ownerName);
             }
 
             spaceStationsMap.put(planetKey, spaceStationGroupMap);
         }
 
-        return new com.mojang.datafixers.util.Pair<>(Collections.unmodifiableMap(spaceStationsMap), Collections.unmodifiableMap(ownerNames));
+        return Collections.unmodifiableMap(spaceStationsMap);
     }
 
 
