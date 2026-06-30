@@ -73,6 +73,19 @@ public class PlanetsMenuProvider implements ExtraDataMenuProvider {
 
         buffer.writeVarInt(locations.size());
         locations.forEach(buffer::writeGlobalPos);
+
+        // UUID -> display name map, written after all other data to avoid buf misalignment
+        Set<UUID> allOwners = new java.util.LinkedHashSet<>();
+        AdAstraData.planets().keySet().forEach(dimension ->
+            allOwners.addAll(SpaceStationHandler.getAllSpaceStations(player.server.getLevel(dimension)).keySet()));
+        buffer.writeVarInt(allOwners.size());
+        allOwners.forEach(id -> {
+            buffer.writeUUID(id);
+            String name = player.server.getProfileCache() != null
+                ? player.server.getProfileCache().get(id).map(com.mojang.authlib.GameProfile::getName).orElse(id.toString())
+                : id.toString();
+            buffer.writeUtf(name);
+        });
     }
 
     public static Set<ResourceLocation> createDisabledPlanetsFromBuf(FriendlyByteBuf buf) {
@@ -136,5 +149,16 @@ public class PlanetsMenuProvider implements ExtraDataMenuProvider {
             locations.add(buf.readGlobalPos());
         }
         return Collections.unmodifiableSet(locations);
+    }
+
+    public static Map<UUID, String> createOwnerNamesFromBuf(FriendlyByteBuf buf) {
+        int count = buf.readVarInt();
+        Map<UUID, String> names = new HashMap<>(count);
+        for (int i = 0; i < count; i++) {
+            UUID id = buf.readUUID();
+            String name = buf.readUtf();
+            names.put(id, name);
+        }
+        return Collections.unmodifiableMap(names);
     }
 }
