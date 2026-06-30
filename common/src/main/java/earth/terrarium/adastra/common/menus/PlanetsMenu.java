@@ -43,11 +43,13 @@ public class PlanetsMenu extends AbstractContainerMenu {
     protected final Object2BooleanMap<ResourceKey<Level>> claimedChunks = new Object2BooleanOpenHashMap<>();
     protected final Set<GlobalPos> spawnLocations;
     protected final Map<UUID, String> ownerNames;
+    protected final boolean openSpaceStationTravel;
 
     public PlanetsMenu(int containerId, Inventory inventory, FriendlyByteBuf buf) {
         this(containerId,
             inventory,
             PlanetsMenuProvider.createDisabledPlanetsFromBuf(buf),
+            PlanetsMenuProvider.readOpenSpaceStationTravelFromBuf(buf),
             PlanetsMenuProvider.createSpaceStationsFromBuf(buf),
             PlanetsMenuProvider.createClaimedChunksFromBuf(buf),
             PlanetsMenuProvider.createSpawnLocationsFromBuf(buf),
@@ -60,12 +62,13 @@ public class PlanetsMenu extends AbstractContainerMenu {
                        Map<ResourceKey<Level>, Map<UUID, Set<SpaceStation>>> spaceStations,
                        Object2BooleanMap<ResourceKey<Level>> claimedChunks,
                        Set<GlobalPos> spawnLocations) {
-        this(containerId, inventory, disabledPlanets, spaceStations, claimedChunks, spawnLocations, Map.of());
+        this(containerId, inventory, disabledPlanets, false, spaceStations, claimedChunks, spawnLocations, Map.of());
     }
 
     public PlanetsMenu(int containerId,
                        Inventory inventory,
                        Set<ResourceLocation> disabledPlanets,
+                       boolean openSpaceStationTravel,
                        Map<ResourceKey<Level>, Map<UUID, Set<SpaceStation>>> spaceStations,
                        Object2BooleanMap<ResourceKey<Level>> claimedChunks,
                        Set<GlobalPos> spawnLocations,
@@ -76,6 +79,7 @@ public class PlanetsMenu extends AbstractContainerMenu {
         level = player.level();
         tier = player.getVehicle() instanceof Rocket vehicle ? vehicle.tier() : 100;
         this.disabledPlanets = disabledPlanets;
+        this.openSpaceStationTravel = openSpaceStationTravel;
         this.spaceStations = spaceStations;
         this.ingredients = getSpaceStationRecipes();
         this.spawnLocations = spawnLocations;
@@ -183,6 +187,14 @@ public class PlanetsMenu extends AbstractContainerMenu {
             stations.addAll(getOwnedSpaceStations(dimension, member));
         }
         return stations;
+    }
+
+    public boolean isOpenSpaceStationTravel() {
+        return openSpaceStationTravel;
+    }
+
+    public List<Pair<String, SpaceStation>> getVisibleSpaceStations(ResourceKey<Level> dimension) {
+        return openSpaceStationTravel ? getAllSpaceStations(dimension) : getOwnedAndTeamSpaceStations(dimension);
     }
 
     public List<Pair<String, SpaceStation>> getAllSpaceStations(ResourceKey<Level> dimension) {

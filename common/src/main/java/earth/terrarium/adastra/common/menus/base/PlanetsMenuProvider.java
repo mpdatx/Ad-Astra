@@ -41,6 +41,7 @@ public class PlanetsMenuProvider implements ExtraDataMenuProvider {
     @Override
     public void writeExtraData(ServerPlayer player, FriendlyByteBuf buffer) {
         buffer.writeUtf(AdAstraConfig.disabledPlanets);
+        buffer.writeBoolean(AdAstraConfig.openSpaceStationTravel);
 
         buffer.writeVarInt(AdAstraData.planets().size());
         AdAstraData.planets().keySet().forEach(dimension -> {
@@ -95,6 +96,10 @@ public class PlanetsMenuProvider implements ExtraDataMenuProvider {
             disabledPlanets.add(new ResourceLocation(planet));
         }
         return Collections.unmodifiableSet(disabledPlanets);
+    }
+
+    public static boolean readOpenSpaceStationTravelFromBuf(FriendlyByteBuf buf) {
+        return buf.readBoolean();
     }
 
     public static Map<ResourceKey<Level>, Map<UUID, Set<SpaceStation>>> createSpaceStationsFromBuf(FriendlyByteBuf buf) {

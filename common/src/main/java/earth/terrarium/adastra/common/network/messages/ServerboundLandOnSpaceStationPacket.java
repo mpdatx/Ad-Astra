@@ -21,13 +21,20 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public record ServerboundLandOnSpaceStationPacket(ResourceKey<Level> dimension,
                                                   ChunkPos spaceStationPos) implements Packet<ServerboundLandOnSpaceStationPacket> {
 
     public static final ServerboundPacketType<ServerboundLandOnSpaceStationPacket> TYPE = new Type();
+
+    private static boolean isAllowed(ServerPlayer player, Map<UUID, Set<earth.terrarium.adastra.common.handlers.base.SpaceStation>> allStations, ChunkPos targetPos) {
+        Set<earth.terrarium.adastra.common.handlers.base.SpaceStation> owned = allStations.get(player.getUUID());
+        return owned != null && owned.stream().anyMatch(s -> s.position().equals(targetPos));
+    }
 
     @Override
     public PacketType<ServerboundLandOnSpaceStationPacket> type() {
@@ -64,9 +71,15 @@ public record ServerboundLandOnSpaceStationPacket(ResourceKey<Level> dimension,
                 if (!ModUtils.canTeleportToPlanet(player, planet)) return;
 
                 var targetPos = packet.spaceStationPos();
-                if (SpaceStationHandler.getAllSpaceStations(targetLevel).values().stream()
-                    .flatMap(Set::stream)
-                    .noneMatch(station -> station.position().equals(targetPos))) return;
+                var allStations = SpaceStationHandler.getAllSpaceStations(targetLevel);
+
+                if (AdAstraConfig.openSpaceStationTravel) {
+                    // Any station on the server is a valid destination
+                    if (allStations.values().stream().flatMap(Set::stream).noneMatch(s -> s.position().equals(targetPos))) return;
+                } else {
+                    // Only own stations (and team stations via Argonauts) are valid
+                    if (!isAllowed(serverPlayer, allStations, targetPos)) return;
+                }
 
                 BlockPos middleBlockPosition = targetPos.getMiddleBlockPosition(AdAstraConfig.atmosphereLeave);
                 ModUtils.land(serverPlayer, targetLevel, new Vec3(middleBlockPosition.getX() - 0.5f, middleBlockPosition.getY(), middleBlockPosition.getZ() - 0.5f));

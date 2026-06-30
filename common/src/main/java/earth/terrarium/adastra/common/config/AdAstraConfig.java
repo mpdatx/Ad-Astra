@@ -109,6 +109,14 @@ public final class AdAstraConfig {
     @Comment("An Air Vortex is created when an oxygenated structure breaks its seal, causing every entity inside to rapidly get sucked out. This setting disables that.")
     public static boolean disableAirVortexes;
 
+    @ConfigEntry(
+        id = "openSpaceStationTravel",
+        type = EntryType.BOOLEAN,
+        translation = "config.ad_astra.openSpaceStationTravel"
+    )
+    @Comment("When enabled, players can view and travel to any space station on the server, not just their own or their team's.")
+    public static boolean openSpaceStationTravel;
+
     @InlineCategory
     public static MachineConfig machineConfig;
 }
