@@ -23,16 +23,14 @@ public abstract class ServerGamePacketListenerImplMixin {
 
     @Inject(method = "tick", at = @At("HEAD"))
     public void adastra$tick(CallbackInfo ci) {
-        if (player.tickCount % 50 == 0) {
-            // Prevent the player from being kicked for flying a jet suit.
-            if (!player.onGround() && JetSuitItem.hasFullSet(player)) {
-                aboveGroundTickCount = 0;
-            }
+        // Prevent the player from being kicked for flying a jet suit.
+        if (!player.onGround() && JetSuitItem.hasFullSet(player)) {
+            aboveGroundTickCount = 0;
+        }
 
-            // Prevent the player from being kicked for flying in a rocket.
-            if (player.getVehicle() instanceof Vehicle) {
-                aboveGroundVehicleTickCount = 0;
-            }
+        // Prevent the player from being kicked for flying in a rocket.
+        if (player.getVehicle() instanceof Vehicle) {
+            aboveGroundVehicleTickCount = 0;
         }
     }
 }
